@@ -1,0 +1,26 @@
+dependencies {
+    compile project(':android_10')
+    compile files('libs/padbotsdk_3.1.0.jar')
+    compile 'com.tbruyelle.rxpermissions:rxpermissions:0.9.1@aar'
+}
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    defaultConfig {
+        minSdkVersion 15
+        applicationId 'org.ros.android.android_ros_padbot'
+        targetSdkVersion 15
+        versionCode 1
+        versionName "1.0"
+    }
+    sourceSets.main {
+        jni.srcDirs = []
+        jniLibs.srcDirs = ['libs']
+    }
+}
+
+repositories {
+    jcenter()
+}
