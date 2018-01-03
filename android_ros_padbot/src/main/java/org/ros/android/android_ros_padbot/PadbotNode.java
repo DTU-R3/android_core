@@ -48,6 +48,8 @@ public class PadbotNode extends AbstractNodeMain {
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             @Override
             protected void loop() throws InterruptedException {
+
+                // Publish battery and obstacle data
                 std_msgs.Int8 batteryData = batteryPub.newMessage();
                 std_msgs.String obstacleData = obstaclePub.newMessage();
                 batteryData.setData( (byte) ControlActivity.batteryData);
@@ -58,42 +60,38 @@ public class PadbotNode extends AbstractNodeMain {
                 if (ControlActivity.robot != null) {
 
                     // Set movement speed
-                    double s = Math.abs(linearSpeed);
+                    double v = Math.abs(linearSpeed);
                     double w = Math.abs(angularSpeed);
 
-                    ControlActivity.robot.setMovementSpeed( Math.min( (int) Math.ceil(s/0.3) ,6 ) );
+                    ControlActivity.robot.setMovementSpeed( Math.min( (int) Math.ceil((v+w/2)/0.3) ,6 ) );
 
-                    if (s < deadzone && w < deadzone) {
-                        ControlActivity.robot.stop();
+                    if (w < deadzone) {
+                        if (linearSpeed > deadzone)
+                            ControlActivity.robot.goForward();
+                        else if (linearSpeed < -deadzone)
+                            ControlActivity.robot.goBackward();
+                        else
+                            ControlActivity.robot.stop();
+                    }
+                    else if (v < deadzone) {
+                        if (angularSpeed > deadzone)
+                            ControlActivity.robot.turnLeft();
+                        else if (angularSpeed < -deadzone)
+                            ControlActivity.robot.turnRight();
+                        else
+                            ControlActivity.robot.stop();
                     }
                     else {
-
                         int offset = 1;
 
-                        if (s/w >= 3)
+                        if (v/w >= 3)
                             offset = 1;
-                        else if (s/w >= 1)
+                        else if (v/w >= 1)
                             offset = 2;
-                        else if (s/w >= 0.375)
+                        else if (v/w >= 0.375)
                             offset = 3;
                         else
                             offset = 4;
-
-                        if (linearSpeed > deadzone && w < deadzone) {
-                            ControlActivity.robot.goForward();
-                        }
-
-                        if (linearSpeed < -deadzone && w < deadzone) {
-                            ControlActivity.robot.goBackward();
-                        }
-
-                        if (s < deadzone && angularSpeed > deadzone) {
-                            ControlActivity.robot.turnLeft();
-                        }
-
-                        if (s < deadzone && angularSpeed < -deadzone) {
-                            ControlActivity.robot.turnRight();
-                        }
 
                         if (linearSpeed > deadzone && angularSpeed > deadzone) {
                             ControlActivity.robot.goForwardLeft(offset);
@@ -110,7 +108,6 @@ public class PadbotNode extends AbstractNodeMain {
                         if (linearSpeed < -deadzone && angularSpeed < -deadzone) {
                             ControlActivity.robot.goBackwardLeft(offset);
                         }
-
                     }
 
                     // Set robot movement
@@ -139,14 +136,17 @@ public class PadbotNode extends AbstractNodeMain {
                     }
 
                     // Enable/Disable obstacle detection
-                    if (obstacle_enable)
+                    if (obstacle_enable) {
                         ControlActivity.robot.turnOnObstacleDetection();
-                    else
+                        ControlActivity.robot.queryObstacleDistanceData();
+                    }
+                    else {
                         ControlActivity.robot.turnOffObstacleDetection();
+                    }
 
                     // Query the robot information
                     ControlActivity.robot.queryBatteryPercentage();
-                    ControlActivity.robot.queryObstacleDistanceData();
+
                 }
 
                 Thread.sleep(100);

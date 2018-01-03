@@ -22,7 +22,7 @@
             android:layout_margin="20dp"
             android:layout_centerHorizontal="true"
             android:textSize="30dp"
-            android:text="Choose robot type : "/>
+            android:text="Robot type : "/>
 
         <Button
             android:id="@+id/ut_mode_bt"

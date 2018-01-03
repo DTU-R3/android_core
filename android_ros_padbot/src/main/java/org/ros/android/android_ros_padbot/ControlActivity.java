@@ -1,5 +1,6 @@
 package org.ros.android.android_ros_padbot;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -18,6 +19,8 @@ import cn.inbot.padbotsdk.model.ObstacleDistanceData;
 public class ControlActivity extends RosActivity implements RobotConnectionListener,RobotListener {
 
     static public Robot robot;
+    private String serialNumber;
+    private int model;
     static public Boolean stopBtnClicked = false;
 
     private TextView name_tv;
@@ -39,6 +42,15 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_control);
+
+        setTitle("Control Robot");
+
+        RobotManager.getInstance(getApplication()).setRobotConnectionListener(this);
+        RobotManager.getInstance(getApplication()).openSoundSourceAngleListener();
+
+        Intent intent = getIntent();
+        model = intent.getIntExtra("model", 0);
+        serialNumber = intent.getStringExtra("serialNumber");
 
         name_tv = (TextView) findViewById(R.id.robot_name_value_tv);
         connection_tv = (TextView) findViewById(R.id.connection_value_tv);
@@ -62,7 +74,20 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
             case R.id.connect_robot_btn:
                 connection_tv.setText("Connecting...");
-                RobotManager.getInstance(getApplication()).connectRobotBySerialPort();
+                if (1 == model) {
+                    RobotManager.getInstance(getApplication()).connectRobotByBluetooth(serialNumber);
+                }
+                else if (2 == model) {
+                    RobotManager.getInstance(getApplication()).connectRobotBySerialPort();
+                }
+                break;
+
+            case R.id.disconnect_robot_btn:
+
+                connection_tv.setText("Disconnecting...");
+
+                RobotManager.getInstance(getApplication()).disconnectRobot();
+
                 break;
 
             case R.id.stop_robot_btn:
