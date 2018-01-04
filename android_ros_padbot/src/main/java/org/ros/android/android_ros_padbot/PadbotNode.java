@@ -1,18 +1,20 @@
 package org.ros.android.android_ros_padbot;
 
+import android.hardware.Camera;
+
+import org.ros.concurrent.CancellableLoop;
+import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.Node;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
-import org.ros.concurrent.CancellableLoop;
-import org.ros.message.MessageListener;
 
+import geometry_msgs.Twist;
 import std_msgs.Bool;
 import std_msgs.Int8;
 import std_msgs.String;
-import geometry_msgs.Twist;
 
 public class PadbotNode extends AbstractNodeMain {
 
@@ -43,6 +45,7 @@ public class PadbotNode extends AbstractNodeMain {
         final Subscriber<geometry_msgs.Twist> speedSub = connectedNode.newSubscriber("cmd_vel", Twist._TYPE);
         final Subscriber<std_msgs.String> headSub = connectedNode.newSubscriber("padbot/headmove",String._TYPE);
         final Subscriber<std_msgs.Bool> enObstacleSub = connectedNode.newSubscriber("padbot/obstacle_enable", Bool._TYPE);
+        final Subscriber<std_msgs.Int8> cameraIDSub = connectedNode.newSubscriber("padbot/cameraID", Int8._TYPE);
 
         // The loop breaks when the node shuts down
         connectedNode.executeCancellableLoop(new CancellableLoop() {
@@ -172,6 +175,21 @@ public class PadbotNode extends AbstractNodeMain {
             @Override
             public void onNewMessage(Bool bool) {
                 obstacle_enable = bool.getData();
+            }
+        });
+
+        cameraIDSub.addMessageListener(new MessageListener<Int8>() {
+            @Override
+            public void onNewMessage(Int8 int8) {
+                int numberOfCameras = Camera.getNumberOfCameras();
+                if (numberOfCameras > 1) {
+                    ControlActivity.cameraId = int8.getData() % numberOfCameras;
+                }
+                else {
+                    ControlActivity.cameraId = 0;
+                }
+                ControlActivity.rosCameraPreviewView.releaseCamera();
+                ControlActivity.rosCameraPreviewView.setCamera(ControlActivity.getCamera());
             }
         });
     }

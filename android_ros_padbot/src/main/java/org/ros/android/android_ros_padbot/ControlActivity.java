@@ -1,11 +1,14 @@
 package org.ros.android.android_ros_padbot;
 
 import android.content.Intent;
+import android.hardware.Camera;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
 import org.ros.android.RosActivity;
+import org.ros.android.view.camera.RosCameraPreviewView;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
@@ -28,6 +31,10 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
     private TextView obstacle_tv;
     private TextView battery_tv;
+
+    // Camera
+    static public int cameraId;
+    static public RosCameraPreviewView rosCameraPreviewView;
 
     // ROS messages
     public PadbotNode node;
@@ -57,6 +64,8 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
         obstacle_tv = (TextView) findViewById(R.id.obstacle_value_tv);
         battery_tv = (TextView) findViewById(R.id.battery_value_tv);
+
+        rosCameraPreviewView = (RosCameraPreviewView) findViewById(R.id.ros_camera_preview_view);
     }
 
     @Override
@@ -67,6 +76,10 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
         // Run the node
         nodeMainExecutor.execute(node,nodeConfiguration);
+
+        cameraId = 0;
+        rosCameraPreviewView.setCamera(getCamera());
+        nodeMainExecutor.execute(rosCameraPreviewView, nodeConfiguration);
     }
 
     public void onClick(View view) {
@@ -97,6 +110,21 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
             default:
                 break;
         }
+    }
+
+    static public Camera getCamera() {
+        Camera cam = Camera.open(cameraId);
+        Camera.Parameters camParams = cam.getParameters();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            if (camParams.getSupportedFocusModes().contains(
+                    Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+                camParams.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+            } else {
+                camParams.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            }
+        }
+        cam.setParameters(camParams);
+        return cam;
     }
 
     @Override
