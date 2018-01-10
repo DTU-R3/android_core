@@ -80,6 +80,10 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
         cameraId = 0;
         rosCameraPreviewView.setCamera(getCamera());
         nodeMainExecutor.execute(rosCameraPreviewView, nodeConfiguration);
+
+        // Run the node
+        VirtualEncoder virtual_encoder = new VirtualEncoder();
+        nodeMainExecutor.execute(virtual_encoder, nodeConfiguration);
     }
 
     public void onClick(View view) {

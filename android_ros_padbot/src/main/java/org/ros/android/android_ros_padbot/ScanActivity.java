@@ -189,4 +189,11 @@ public class ScanActivity extends Activity implements RobotScanListener {
     private class RobotViewHolder {
         public TextView nameTextView;
     }
+
+    /**
+     * Created by ros on 1/10/18.
+     */
+
+    public static class VirtualEncoder {
+    }
 }
