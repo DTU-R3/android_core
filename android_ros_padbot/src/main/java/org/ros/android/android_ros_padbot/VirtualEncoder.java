@@ -76,8 +76,8 @@ public class VirtualEncoder implements NodeMain {
             public void run() {
                 double deltaDis = vel_linear * 0.001;
                 double deltaTheta = vel_angular * 0.001;
-                robot_x = deltaDis * Math.cos(robot_th);
-                robot_y = deltaDis * Math.sin(robot_th);
+                robot_x = robot_x + deltaDis * Math.cos(robot_th);
+                robot_y = robot_y + deltaDis * Math.sin(robot_th);
                 robot_th = robot_th + deltaTheta;
             }
         }, 0,1);
