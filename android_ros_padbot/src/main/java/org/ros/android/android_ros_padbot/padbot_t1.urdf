@@ -1,0 +1,160 @@
+<?xml version="1.0" ?>
+<robot name="padbot_t1" xmlns:xacro="http://ros.org/wiki/xacro">
+    <material name="veryDarkGrey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+    </material>
+    <material name="light_grey">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+    </material>
+    <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0"/>
+    </material>
+    
+    <link name="base_link">
+        <inertial>
+            <mass value="2"/>
+            <origin xyz="0 0 0.0"/>
+            <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.5"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.16 0.13 0.03"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.16 0.13 0.03"/>
+            </geometry>
+        </collision>
+    </link>
+    <link name="left_wheel">
+        <inertial>
+            <mass value="0.001"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.13 0.01 0.005"/>
+            </geometry>
+            <material name="veryDarkGrey"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.13 0.01 0.005"/>
+            </geometry>
+        </collision>
+    </link>
+    <link name="right_wheel">
+        <inertial>
+            <mass value="0.001"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.13 0.01 0.005"/>
+            </geometry>
+            <material name="veryDarkGrey"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.13 0.01 0.005"/>
+            </geometry>
+        </collision>
+    </link>
+    <link name="left_cover">
+        <inertial>
+            <mass value="0.001"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.16 0.04 0.003"/>
+            </geometry>
+            <material name="light_grey"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.16 0.04 0.003"/>
+            </geometry>
+        </collision>
+    </link>
+    <link name="right_cover">
+        <inertial>
+            <mass value="0.001"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.16 0.04 0.003"/>
+            </geometry>
+            <material name="light_grey"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.16 0.04 0.003"/>
+            </geometry>
+        </collision>
+    </link>
+    <link name="device_holder">
+        <inertial>
+            <mass value="0.001"/>
+            <origin xyz="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.08 0.05 0.005"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.08 0.05 0.005"/>
+            </geometry>
+        </collision>
+    </link>
+    
+    <joint name="left_wheel_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0.049 -0.0175"/>
+        <parent link="base_link"/>
+        <child link="left_wheel"/>
+    </joint>   
+    <joint name="right_wheel_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 -0.049 -0.0175"/>
+        <parent link="base_link"/>
+        <child link="right_wheel"/>
+    </joint>  
+    <joint name="left_cover_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0.045 0.0165"/>
+        <parent link="base_link"/>
+        <child link="left_cover"/>
+    </joint>   
+    <joint name="right_cover_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 -0.045 0.0165"/>
+        <parent link="base_link"/>
+        <child link="right_cover"/>
+    </joint>  
+    <joint name="device_holder_joint" type="fixed">
+        <origin rpy="0 1 0" xyz="0 0 0.05"/>
+        <parent link="base_link"/>
+        <child link="device_holder"/>
+    </joint>  
+</robot>
+

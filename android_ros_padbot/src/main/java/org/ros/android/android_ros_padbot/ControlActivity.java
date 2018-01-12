@@ -71,6 +71,7 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
     @Override
     protected void init(NodeMainExecutor nodeMainExecutor) {
         node = new PadbotNode();
+
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(getRosHostname());
         nodeConfiguration.setMasterUri(getMasterUri());
 

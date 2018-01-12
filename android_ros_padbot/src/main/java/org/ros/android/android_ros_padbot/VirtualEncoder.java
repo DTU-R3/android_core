@@ -79,6 +79,13 @@ public class VirtualEncoder implements NodeMain {
                 robot_x = robot_x + deltaDis * Math.cos(robot_th);
                 robot_y = robot_y + deltaDis * Math.sin(robot_th);
                 robot_th = robot_th + deltaTheta;
+                if (robot_th > Math.PI) {
+                    robot_th = robot_th - 2 * Math.PI;
+                }
+                if (robot_th < -Math.PI) {
+                    robot_th = robot_th + 2 * Math.PI;
+                }
+
             }
         }, 0,1);
     }

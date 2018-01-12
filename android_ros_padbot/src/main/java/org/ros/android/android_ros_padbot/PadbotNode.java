@@ -8,6 +8,7 @@ import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.Node;
+import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 
@@ -46,6 +47,10 @@ public class PadbotNode extends AbstractNodeMain {
         final Subscriber<std_msgs.String> headSub = connectedNode.newSubscriber("padbot/headmove",String._TYPE);
         final Subscriber<std_msgs.Bool> enObstacleSub = connectedNode.newSubscriber("padbot/obstacle_enable", Bool._TYPE);
         final Subscriber<std_msgs.Int8> cameraIDSub = connectedNode.newSubscriber("padbot/cameraID", Int8._TYPE);
+
+        ParameterTree params = connectedNode.getParameterTree();
+        java.lang.String urdf = "padbot_t1";
+        params.set("/robot_description", urdf);
 
         // The loop breaks when the node shuts down
         connectedNode.executeCancellableLoop(new CancellableLoop() {
