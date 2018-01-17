@@ -7,10 +7,15 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import org.apache.commons.io.IOUtils;
 import org.ros.android.RosActivity;
 import org.ros.android.view.camera.RosCameraPreviewView;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import cn.inbot.padbotsdk.Robot;
 import cn.inbot.padbotsdk.RobotManager;
@@ -41,6 +46,9 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
     static public int batteryData = 100;
     static public String obstacleData = "";
 
+    // ROS parameter
+    static public String urdf = "";
+
     public ControlActivity() {
         super("PadBot", "PadBot");
     }
@@ -66,6 +74,13 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
         battery_tv = (TextView) findViewById(R.id.battery_value_tv);
 
         rosCameraPreviewView = (RosCameraPreviewView) findViewById(R.id.ros_camera_preview_view);
+
+        InputStream is = getResources().openRawResource(R.raw.padbot_t1);
+        try {
+            urdf = IOUtils.toString(is, String.valueOf(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -23,7 +23,7 @@ public class PadbotNode extends AbstractNodeMain {
 
     private double linearSpeed = 0.0;
     private double angularSpeed = 0.0;
-    private double deadzone = 0.1;  // a speed smaller than this value will not work
+    private double deadzone = 0;  // a speed smaller than this value will not work
 
     private java.lang.String headMoveCmd = "null";
     private boolean obstacle_enable = true;
@@ -48,9 +48,9 @@ public class PadbotNode extends AbstractNodeMain {
         final Subscriber<std_msgs.Bool> enObstacleSub = connectedNode.newSubscriber("padbot/obstacle_enable", Bool._TYPE);
         final Subscriber<std_msgs.Int8> cameraIDSub = connectedNode.newSubscriber("padbot/cameraID", Int8._TYPE);
 
+        // ROS parameters
         ParameterTree params = connectedNode.getParameterTree();
-        java.lang.String urdf = "padbot_t1";
-        params.set("/robot_description", urdf);
+        params.set("/robot_description", ControlActivity.urdf);
 
         // The loop breaks when the node shuts down
         connectedNode.executeCancellableLoop(new CancellableLoop() {
@@ -71,9 +71,9 @@ public class PadbotNode extends AbstractNodeMain {
                     double v = Math.abs(linearSpeed);
                     double w = Math.abs(angularSpeed);
 
-                    ControlActivity.robot.setMovementSpeed( Math.min( (int) Math.ceil((v+w/2)/0.3) ,6 ) );
+                    ControlActivity.robot.setMovementSpeed( Math.min( (int) Math.ceil((v+w)/0.3) ,6 ) );
 
-                    if (w < deadzone) {
+                    if (w <= deadzone) {
                         if (linearSpeed > deadzone)
                             ControlActivity.robot.goForward();
                         else if (linearSpeed < -deadzone)
@@ -81,7 +81,7 @@ public class PadbotNode extends AbstractNodeMain {
                         else
                             ControlActivity.robot.stop();
                     }
-                    else if (v < deadzone) {
+                    else if (v <= deadzone) {
                         if (angularSpeed > deadzone)
                             ControlActivity.robot.turnLeft();
                         else if (angularSpeed < -deadzone)
@@ -96,7 +96,7 @@ public class PadbotNode extends AbstractNodeMain {
                             offset = 1;
                         else if (v/w >= 1)
                             offset = 2;
-                        else if (v/w >= 0.375)
+                        else if (v/w >= 0.33)
                             offset = 3;
                         else
                             offset = 4;
