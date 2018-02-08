@@ -13,6 +13,7 @@ import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 
 import geometry_msgs.Twist;
+import geometry_msgs.Vector3;
 import std_msgs.Bool;
 import std_msgs.Int8;
 import std_msgs.String;
@@ -23,6 +24,9 @@ public class PadbotNode extends AbstractNodeMain {
 
     private double linearSpeed = 0.0;
     private double angularSpeed = 0.0;
+    private int vel_cmd = 0;
+    private double[] vel_linear = {0, 0.0779, 0.0763, 0.0762, 0.0753, 0.0752, 0};
+    private double[] vel_angular = {0, 0, 0.0312, 0.0585, 0.0896, 0.1212, 0.865};
     private double deadzone = 0;  // a speed smaller than this value will not work
 
     private java.lang.String headMoveCmd = "null";
@@ -43,7 +47,8 @@ public class PadbotNode extends AbstractNodeMain {
         // Publishers and subscribers
         final Publisher<std_msgs.Int8> batteryPub = connectedNode.newPublisher("padbot/battery_percentage", Int8._TYPE);
         final Publisher<std_msgs.String> obstaclePub = connectedNode.newPublisher("padbot/obstacle", String._TYPE);
-        final Subscriber<geometry_msgs.Twist> speedSub = connectedNode.newSubscriber("cmd_vel", Twist._TYPE);
+        final Publisher<geometry_msgs.Twist> velPub = connectedNode.newPublisher("padbot/cmd_vel", Twist._TYPE);
+        final Subscriber<geometry_msgs.Twist> velSub = connectedNode.newSubscriber("cmd_vel", Twist._TYPE);
         final Subscriber<std_msgs.String> headSub = connectedNode.newSubscriber("padbot/headmove",String._TYPE);
         final Subscriber<std_msgs.Bool> enObstacleSub = connectedNode.newSubscriber("padbot/obstacle_enable", Bool._TYPE);
         final Subscriber<std_msgs.Int8> cameraIDSub = connectedNode.newSubscriber("padbot/cameraID", Int8._TYPE);
@@ -67,55 +72,37 @@ public class PadbotNode extends AbstractNodeMain {
 
                 if (ControlActivity.robot != null) {
 
-                    // Set movement speed
-                    double v = Math.abs(linearSpeed);
-                    double w = Math.abs(angularSpeed);
+                    ControlActivity.robot.setMovementSpeed(1);
 
-                    ControlActivity.robot.setMovementSpeed( Math.min( (int) Math.ceil((v+w)/0.3) ,6 ) );
-
-                    if (w <= deadzone) {
-                        if (linearSpeed > deadzone)
-                            ControlActivity.robot.goForward();
-                        else if (linearSpeed < -deadzone)
-                            ControlActivity.robot.goBackward();
-                        else
+                    switch (vel_cmd){
+                        case 1:
+                            if(linearSpeed > 0)
+                                ControlActivity.robot.goForward();
+                            else
+                                ControlActivity.robot.goBackward();
+                            break;
+                        case 2:
+                        case 3:
+                        case 4:
+                        case 5:
+                            if((linearSpeed > 0)&&(angularSpeed > 0))
+                                ControlActivity.robot.goForwardLeft(vel_cmd-1);
+                            else if((linearSpeed > 0)&&(angularSpeed < 0))
+                                ControlActivity.robot.goForwardRight(vel_cmd-1);
+                            else if((linearSpeed < 0)&&(angularSpeed > 0))
+                                ControlActivity.robot.goBackwardRight(vel_cmd-1);
+                            else
+                                ControlActivity.robot.goBackwardLeft(vel_cmd-1);
+                            break;
+                        case 6:
+                            if(angularSpeed > 0)
+                                ControlActivity.robot.turnLeft();
+                            else
+                                ControlActivity.robot.turnRight();
+                            break;
+                        default:
                             ControlActivity.robot.stop();
-                    }
-                    else if (v <= deadzone) {
-                        if (angularSpeed > deadzone)
-                            ControlActivity.robot.turnLeft();
-                        else if (angularSpeed < -deadzone)
-                            ControlActivity.robot.turnRight();
-                        else
-                            ControlActivity.robot.stop();
-                    }
-                    else {
-                        int offset = 1;
-
-                        if (v/w >= 3)
-                            offset = 1;
-                        else if (v/w >= 1)
-                            offset = 2;
-                        else if (v/w >= 0.33)
-                            offset = 3;
-                        else
-                            offset = 4;
-
-                        if (linearSpeed > deadzone && angularSpeed > deadzone) {
-                            ControlActivity.robot.goForwardLeft(offset);
-                        }
-
-                        if (linearSpeed > deadzone && angularSpeed < -deadzone) {
-                            ControlActivity.robot.goForwardRight(offset);
-                        }
-
-                        if (linearSpeed < -deadzone && angularSpeed > deadzone) {
-                            ControlActivity.robot.goBackwardRight(offset);
-                        }
-
-                        if (linearSpeed < -deadzone && angularSpeed < -deadzone) {
-                            ControlActivity.robot.goBackwardLeft(offset);
-                        }
+                            break;
                     }
 
                     // Set robot movement
@@ -161,11 +148,39 @@ public class PadbotNode extends AbstractNodeMain {
             }
         });
 
-        speedSub.addMessageListener(new MessageListener<Twist>() {
+        velSub.addMessageListener(new MessageListener<Twist>() {
             @Override
             public void onNewMessage(Twist twist) {
                 linearSpeed = twist.getLinear().getX();
                 angularSpeed = twist.getAngular().getZ();
+                double v = Math.abs(linearSpeed);
+                double w = Math.abs(angularSpeed);
+                vel_cmd = 0;
+                double dist = 255.0;
+                for (int i=0; i < vel_linear.length; i++ ) {
+                    if( Math.sqrt((v-vel_linear[i])*(v-vel_linear[i])+(w-vel_angular[i])*(w-vel_angular[i])) < dist ) {
+                        dist = Math.sqrt((v-vel_linear[i])*(v-vel_linear[i])+(w-vel_angular[i])*(w-vel_angular[i]));
+                        vel_cmd = i;
+                    }
+                }
+                geometry_msgs.Twist padbot_vel = velPub.newMessage();
+                Vector3 linear = padbot_vel.getLinear();
+                if (linearSpeed != 0)
+                    linear.setX(linearSpeed*vel_linear[vel_cmd]/v);
+                else
+                    linear.setX(0);
+                linear.setY(0);
+                linear.setZ(0);
+
+                Vector3 angular = padbot_vel.getAngular();
+                angular.setX(0);
+                angular.setY(0);
+                if (angularSpeed != 0)
+                    angular.setZ(angularSpeed*vel_angular[vel_cmd]/w);
+                else
+                    angular.setZ(0);
+
+                velPub.publish(padbot_vel);
             }
         });
 
