@@ -39,7 +39,7 @@ public class VirtualEncoder implements NodeMain {
     public void onStart(ConnectedNode connectedNode) {
         // Publishers and subscribers
         final Publisher<Pose2D> posePub = connectedNode.newPublisher("VirtualEncoder/robot_pose", Pose2D._TYPE);
-        final Subscriber<Twist> velSub = connectedNode.newSubscriber("cmd_vel", Twist._TYPE);
+        final Subscriber<Twist> velSub = connectedNode.newSubscriber("padbot/cmd_vel", Twist._TYPE);
         final Subscriber<Pose2D> poseSub = connectedNode.newSubscriber("robot_pose", Pose2D._TYPE);
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
