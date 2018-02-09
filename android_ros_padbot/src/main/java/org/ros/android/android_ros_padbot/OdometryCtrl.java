@@ -1,6 +1,8 @@
 package org.ros.android.android_ros_padbot;
 
 
+import android.util.Log;
+
 import org.ros.concurrent.CancellableLoop;
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
@@ -30,6 +32,8 @@ public class OdometryCtrl implements NodeMain {
     private double linearSpeed = 0.0;
     private double angularSpeed = 0.0;
 
+    public static final java.lang.String TAG = "OdometryCtrl";
+
     public OdometryCtrl() {
         this.nodeName = "Odometry_control";
     }
@@ -52,18 +56,23 @@ public class OdometryCtrl implements NodeMain {
             protected void loop() throws InterruptedException {
                 switch(robot_state) {
                     case "fwd":
-                        if ( Math.abs(Math.sqrt( (robot_x-start_x)*(robot_x-start_x) + (robot_y-start_y)*(robot_y-start_y)) - Math.abs(distance)) < 0.1) {
+                        double travel_dist = Math.sqrt( (robot_x-start_x)*(robot_x-start_x) + (robot_y-start_y)*(robot_y-start_y));
+                        double remain_dist = Math.abs( travel_dist - Math.abs(distance));
+                        if ( remain_dist < 0.1) {
                             linearSpeed = 0;
                             angularSpeed = 0;
                             robot_state = "done";
                         }
                         break;
+
                     case "turn":
-                        if (Math.abs(robot_th - FitInRadians(start_th + angle) ) < 0.1) {
+                        double remain_ang = Math.abs(robot_th - FitInRadians(start_th + angle) );
+                        if ( remain_ang < 0.1) {
                             linearSpeed = 0;
                             angularSpeed = 0;
                             robot_state = "done";
                         }
+
                         break;
                     case "stop":
                         linearSpeed = 0;
@@ -101,6 +110,7 @@ public class OdometryCtrl implements NodeMain {
                 std_msgs.String state = statePub.newMessage();
                 state.setData(robot_state);
                 statePub.publish(state);
+                Thread.sleep(100);
             }
         });
 
@@ -116,34 +126,35 @@ public class OdometryCtrl implements NodeMain {
         cmdSub.addMessageListener(new MessageListener<String>() {
             @Override
             public void onNewMessage(String string) {
-                java.lang.String str = string.toString();
+                java.lang.String str = string.getData();
                 java.lang.String[] cmds = str.split(",");
-                if (cmds.length>2) {
+                Log.e(TAG,"New command sent");
+                if (cmds.length >1) {
                     robot_state = cmds[0];
                     switch(robot_state) {
                         case "fwd":
                             distance = Double.parseDouble(cmds[1]);
-                            if(distance >= 0)
-                                linearSpeed = 1;
+                            if(distance >= 0.0)
+                                linearSpeed = 1.0;
                             else
-                                linearSpeed = -1;
-                            angularSpeed = 0;
+                                linearSpeed = -1.0;
+                            angularSpeed = 0.0;
                             start_x = robot_x;
                             start_y = robot_y;
                             break;
                         case "turn":
                             angle = Double.parseDouble(cmds[1]) * Math.PI / 180.0;
                             angle = FitInRadians(angle);
-                            linearSpeed = 0;
-                            if(angle >= 0)
-                                angularSpeed = 1;
+                            linearSpeed = 0.0;
+                            if(angle >= 0.0)
+                                angularSpeed = 1.0;
                             else
-                                angularSpeed = -1;
+                                angularSpeed = -1.0;
                             start_th = robot_th;
                             break;
                         case "stop":
-                            linearSpeed = 0;
-                            angularSpeed = 0;
+                            linearSpeed = 0.0;
+                            angularSpeed = 0.0;
                             break;
                         default:
                             break;
@@ -158,7 +169,7 @@ public class OdometryCtrl implements NodeMain {
         while(r > Math.PI) {
             r = r - 2.0 * Math.PI;
         }
-        while(r < Math.PI) {
+        while(r < -Math.PI) {
             r = r + 2.0 * Math.PI;
         }
         return r;
