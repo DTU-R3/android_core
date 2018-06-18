@@ -27,7 +27,6 @@ public class PadbotNode extends AbstractNodeMain {
     private int vel_cmd = 0;
     private double[] vel_linear = {0, 0.0779, 0.0763, 0.0762, 0.0753, 0.0752, 0};
     private double[] vel_angular = {0, 0, 0.0312, 0.0585, 0.0896, 0.1212, 1.8};
-    private double deadzone = 0;  // a speed smaller than this value will not work
 
     private java.lang.String headMoveCmd = "null";
     private boolean obstacle_enable = true;

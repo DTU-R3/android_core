@@ -4,15 +4,19 @@ dependencies {
     compile 'com.baoyz.pullrefreshlayout:library:1.2.0'
     compile 'io.reactivex:rxjava:1.1.6'
     compile 'com.tbruyelle.rxpermissions:rxpermissions:0.9.1@aar'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.android.support.constraint:constraint-layout:1.1.2'
+    // ARCore library
+    compile 'com.google.ar:core:1.2.0'
+    compile "com.google.ar.sceneform:core:1.0.0"
+    compile "com.google.ar.sceneform.ux:sceneform-ux:1.0.0"
 }
 apply plugin: 'com.android.application'
 android {
-    compileSdkVersion 25
+    compileSdkVersion 27
     defaultConfig {
         minSdkVersion 19
         applicationId 'org.ros.android.android_ros_padbot'
-        targetSdkVersion 25
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
     }
@@ -20,6 +24,11 @@ android {
         jni.srcDirs = []
         jniLibs.srcDirs = ['libs']
     }
-    buildToolsVersion '25.0.3'
     sourceSets { main { assets.srcDirs = ['src/main/assets', 'src/main/assets/'] } }
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
+
+apply plugin: 'com.google.ar.sceneform.plugin'

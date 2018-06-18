@@ -19,6 +19,7 @@ public class MainActivity extends Activity {
     if (view.getId() == R.id.ut_mode_bt) {
       Intent intent = new Intent();
       intent.setClass(MainActivity.this, ScanActivity.class);
+      intent.putExtra("model", 1);
       startActivity(intent);
     }
     else if (view.getId() == R.id.px_mode_bt) {

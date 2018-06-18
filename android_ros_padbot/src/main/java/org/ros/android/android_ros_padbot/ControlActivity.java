@@ -102,9 +102,13 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
         VirtualEncoder virtual_encoder = new VirtualEncoder();
         nodeMainExecutor.execute(virtual_encoder, nodeConfiguration);
 
-        // Virtual encoder node
+        // OdometryCtrl node
         OdometryCtrl odometry_control = new OdometryCtrl();
         nodeMainExecutor.execute(odometry_control, nodeConfiguration);
+
+        // ARCore node
+        ARCore ar_core = new ARCore();
+        nodeMainExecutor.execute(ar_core, nodeConfiguration);
     }
 
     public void onClick(View view) {

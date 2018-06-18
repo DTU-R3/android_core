@@ -15,9 +15,9 @@ import java.util.TimerTask;
 import geometry_msgs.Pose2D;
 import geometry_msgs.Twist;
 
-public class VirtualEncoder implements NodeMain {
+public class ARCore implements NodeMain {
 
-    private java.lang.String nodeName;
+    private String nodeName;
 
     private double robot_x = 0.0;
     private double robot_y = 0.0;
@@ -26,8 +26,8 @@ public class VirtualEncoder implements NodeMain {
     private double vel_linear = 0.0;
     private double vel_angular = 0.0;
 
-    public VirtualEncoder() {
-        this.nodeName = "Virtual_encoder";
+    public ARCore() {
+        this.nodeName = "ARCore";
     }
 
     @Override

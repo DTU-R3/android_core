@@ -21,13 +21,14 @@ dependencies {
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion 25
+  compileSdkVersion 27
 
   defaultConfig {
     minSdkVersion 15
     applicationId "org.ros.android.android_tutorial_map_viewer"
-    targetSdkVersion 15
+    targetSdkVersion 27
     versionCode 1
     versionName "1.0"
   }
+  buildToolsVersion '27.0.3'
 }
