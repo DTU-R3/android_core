@@ -196,21 +196,6 @@ public class PadbotNode extends AbstractNodeMain {
                 obstacle_enable = bool.getData();
             }
         });
-
-        cameraIDSub.addMessageListener(new MessageListener<Int8>() {
-            @Override
-            public void onNewMessage(Int8 int8) {
-                int numberOfCameras = Camera.getNumberOfCameras();
-                if (numberOfCameras > 1) {
-                    ControlActivity.cameraId = int8.getData() % numberOfCameras;
-                }
-                else {
-                    ControlActivity.cameraId = 0;
-                }
-                ControlActivity.rosCameraPreviewView.releaseCamera();
-                ControlActivity.rosCameraPreviewView.setCamera(ControlActivity.getCamera());
-            }
-        });
     }
 
     @Override

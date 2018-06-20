@@ -2,6 +2,7 @@ package org.ros.android.android_ros_padbot;
 
 import android.content.Intent;
 import android.hardware.Camera;
+import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -9,13 +10,15 @@ import android.widget.TextView;
 
 import org.apache.commons.io.IOUtils;
 import org.ros.android.RosActivity;
-import org.ros.android.view.camera.RosCameraPreviewView;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
 
 import cn.inbot.padbotsdk.Robot;
 import cn.inbot.padbotsdk.RobotManager;
@@ -24,7 +27,7 @@ import cn.inbot.padbotsdk.listener.RobotConnectionListener;
 import cn.inbot.padbotsdk.listener.RobotListener;
 import cn.inbot.padbotsdk.model.ObstacleDistanceData;
 
-public class ControlActivity extends RosActivity implements RobotConnectionListener,RobotListener {
+public class ControlActivity extends RosActivity implements RobotConnectionListener,RobotListener, GLSurfaceView.Renderer {
 
     static public Robot robot;
     private String serialNumber;
@@ -36,10 +39,6 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
     private TextView obstacle_tv;
     private TextView battery_tv;
-
-    // Camera
-    static public int cameraId;
-    static public RosCameraPreviewView rosCameraPreviewView;
 
     // ROS messages
     public PadbotNode node;
@@ -73,8 +72,6 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
         obstacle_tv = (TextView) findViewById(R.id.obstacle_value_tv);
         battery_tv = (TextView) findViewById(R.id.battery_value_tv);
 
-        rosCameraPreviewView = (RosCameraPreviewView) findViewById(R.id.ros_camera_preview_view);
-
         InputStream is = getResources().openRawResource(R.raw.padbot_t1);
         try {
             urdf = IOUtils.toString(is, String.valueOf(StandardCharsets.UTF_8));
@@ -92,11 +89,6 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
         // Run the node
         nodeMainExecutor.execute(node,nodeConfiguration);
-
-        // Camera node
-        cameraId = 0;
-        rosCameraPreviewView.setCamera(getCamera());
-        nodeMainExecutor.execute(rosCameraPreviewView, nodeConfiguration);
 
         // Virtual encoder node
         VirtualEncoder virtual_encoder = new VirtualEncoder();
@@ -139,21 +131,6 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
             default:
                 break;
         }
-    }
-
-    static public Camera getCamera() {
-        Camera cam = Camera.open(cameraId);
-        Camera.Parameters camParams = cam.getParameters();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            if (camParams.getSupportedFocusModes().contains(
-                    Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
-                camParams.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-            } else {
-                camParams.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-            }
-        }
-        cam.setParameters(camParams);
-        return cam;
     }
 
     @Override
@@ -217,6 +194,21 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
     @Override
     public void onReceivedSoundSourceAngle(int i) {
+
+    }
+
+    @Override
+    public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
+
+    }
+
+    @Override
+    public void onSurfaceChanged(GL10 gl10, int i, int i1) {
+
+    }
+
+    @Override
+    public void onDrawFrame(GL10 gl10) {
 
     }
 }
