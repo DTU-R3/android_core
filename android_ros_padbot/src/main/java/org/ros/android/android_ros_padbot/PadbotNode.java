@@ -1,7 +1,5 @@
 package org.ros.android.android_ros_padbot;
 
-import android.hardware.Camera;
-
 import org.ros.concurrent.CancellableLoop;
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;

@@ -2,11 +2,8 @@ package org.ros.android.android_ros_padbot;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
-
 
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
