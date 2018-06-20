@@ -1,30 +1,26 @@
 package org.ros.android.android_ros_padbot;
 
+import android.util.Log;
+
+import com.google.ar.core.TrackingState;
+
 import org.ros.concurrent.CancellableLoop;
+import org.ros.internal.message.RawMessage;
 import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.ConnectedNode;
 import org.ros.node.Node;
 import org.ros.node.NodeMain;
 import org.ros.node.topic.Publisher;
-import org.ros.node.topic.Subscriber;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import geometry_msgs.Pose2D;
-import geometry_msgs.Twist;
+import geometry_msgs.Point;
+import geometry_msgs.Pose;
+import geometry_msgs.Quaternion;
 
 public class ARCore implements NodeMain {
 
+    private static final String TAG = ARCore.class.getSimpleName();
     private String nodeName;
-
-    private double robot_x = 0.0;
-    private double robot_y = 0.0;
-    private double robot_th = 0.0;
-
-    private double vel_linear = 0.0;
-    private double vel_angular = 0.0;
 
     public ARCore() {
         this.nodeName = "ARCore";
@@ -38,56 +34,30 @@ public class ARCore implements NodeMain {
     @Override
     public void onStart(ConnectedNode connectedNode) {
         // Publishers and subscribers
-        final Publisher<Pose2D> posePub = connectedNode.newPublisher("VirtualEncoder/robot_pose", Pose2D._TYPE);
-        final Subscriber<Twist> velSub = connectedNode.newSubscriber("padbot/cmd_vel", Twist._TYPE);
-        final Subscriber<Pose2D> poseSub = connectedNode.newSubscriber("padbot/robot_pose", Pose2D._TYPE);
+        final Publisher<Pose> posePub = connectedNode.newPublisher("arcore/pose", Pose._TYPE);
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
-            @Override
+
             protected void loop() throws InterruptedException {
-                Pose2D robot_pose = posePub.newMessage();
-                robot_pose.setX(robot_x);
-                robot_pose.setY(robot_y);
-                robot_pose.setTheta(robot_th);
-                posePub.publish(robot_pose);
-            }
-        });
+                try {
+                    Pose robot_pose = posePub.newMessage();
+                    float[] trans = ControlActivity.cameraPose.getTranslation();
+                    Point p = robot_pose.getPosition();
+                    p.setX(trans[0]);
+                    p.setY(trans[1]);
+                    p.setZ(trans[2]);
+                    float[] quat = ControlActivity.cameraPose.getRotationQuaternion();
+                    Quaternion q = robot_pose.getOrientation();
+                    q.setX(quat[0]);
+                    q.setY(quat[1]);
+                    q.setZ(quat[2]);
+                    q.setW(quat[3]);
+                    posePub.publish(robot_pose);
+                } catch (Exception e) {
 
-        velSub.addMessageListener(new MessageListener<Twist>() {
-            @Override
-            public void onNewMessage(Twist twist) {
-                vel_linear = twist.getLinear().getX();
-                vel_angular = twist.getAngular().getZ();
-            }
-        });
-
-        poseSub.addMessageListener(new MessageListener<Pose2D>() {
-            @Override
-            public void onNewMessage(Pose2D pose2D) {
-                robot_x = pose2D.getX();
-                robot_y = pose2D.getY();
-                robot_th = pose2D.getTheta();
-            }
-        });
-
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                double deltaDis = vel_linear * 0.001;
-                double deltaTheta = vel_angular * 0.001;
-                robot_x = robot_x + deltaDis * Math.cos(robot_th);
-                robot_y = robot_y + deltaDis * Math.sin(robot_th);
-                robot_th = robot_th + deltaTheta;
-                if (robot_th > Math.PI) {
-                    robot_th = robot_th - 2 * Math.PI;
                 }
-                if (robot_th < -Math.PI) {
-                    robot_th = robot_th + 2 * Math.PI;
-                }
-
             }
-        }, 0,1);
+        });
     }
 
     @Override

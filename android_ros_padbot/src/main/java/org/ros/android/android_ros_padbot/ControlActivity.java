@@ -1,12 +1,19 @@
 package org.ros.android.android_ros_padbot;
 
 import android.content.Intent;
-import android.hardware.Camera;
-import android.opengl.GLSurfaceView;
-import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
+
+
+import com.google.ar.core.Frame;
+import com.google.ar.core.Pose;
+import com.google.ar.core.Session;
+import com.google.ar.core.exceptions.CameraNotAvailableException;
+import com.google.ar.core.exceptions.UnavailableException;
+import com.google.ar.sceneform.ArSceneView;
 
 import org.apache.commons.io.IOUtils;
 import org.ros.android.RosActivity;
@@ -17,9 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
 import cn.inbot.padbotsdk.Robot;
 import cn.inbot.padbotsdk.RobotManager;
 import cn.inbot.padbotsdk.constant.RobotDisconnectType;
@@ -27,7 +31,10 @@ import cn.inbot.padbotsdk.listener.RobotConnectionListener;
 import cn.inbot.padbotsdk.listener.RobotListener;
 import cn.inbot.padbotsdk.model.ObstacleDistanceData;
 
-public class ControlActivity extends RosActivity implements RobotConnectionListener,RobotListener, GLSurfaceView.Renderer {
+public class ControlActivity extends RosActivity implements RobotConnectionListener,RobotListener {
+
+    private static final String TAG = ControlActivity.class.getSimpleName();
+    private boolean installRequested;
 
     static public Robot robot;
     private String serialNumber;
@@ -39,6 +46,12 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
     private TextView obstacle_tv;
     private TextView battery_tv;
+
+    // ARCore
+    private ArSceneView arSceneView;
+    private static final int RC_PERMISSIONS = 0x123;
+    static public Pose cameraPose;
+    static public Frame frame;
 
     // ROS messages
     public PadbotNode node;
@@ -78,6 +91,46 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        arSceneView = findViewById(R.id.ar_scene_view);
+
+        if (arSceneView.getSession() == null) {
+            // If the session wasn't created yet, don't resume rendering.
+            // This can happen if ARCore needs to be updated or permissions are not granted yet.
+            try {
+                Session session = DemoUtils.createArSession(this, installRequested);
+                if (session == null) {
+                    installRequested = DemoUtils.hasCameraPermission(this);
+                } else {
+                    arSceneView.setupSession(session);
+                }
+            } catch (UnavailableException e) {
+                DemoUtils.handleSessionException(this, e);
+            }
+        }
+
+        try {
+            arSceneView.resume();
+        } catch (CameraNotAvailableException ex) {
+            DemoUtils.displayError(this, "Unable to get camera", ex);
+            finish();
+        }
+
+        // Set an update listener on the Scene that will hide the loading message once a Plane is
+        arSceneView
+                .getScene()
+                .setOnUpdateListener(
+                        frameTime -> {
+
+                            frame = arSceneView.getArFrame();
+                            if (frame == null) {
+                                return;
+                            }
+                            cameraPose = frame.getCamera().getPose();
+                        });
+
+        // Lastly request CAMERA permission which is required by ARCore.
+        DemoUtils.requestCameraPermission(this, RC_PERMISSIONS);
     }
 
     @Override
@@ -194,21 +247,6 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
     @Override
     public void onReceivedSoundSourceAngle(int i) {
-
-    }
-
-    @Override
-    public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-
-    }
-
-    @Override
-    public void onSurfaceChanged(GL10 gl10, int i, int i1) {
-
-    }
-
-    @Override
-    public void onDrawFrame(GL10 gl10) {
 
     }
 }

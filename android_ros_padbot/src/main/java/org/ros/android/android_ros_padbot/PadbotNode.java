@@ -50,7 +50,6 @@ public class PadbotNode extends AbstractNodeMain {
         final Subscriber<geometry_msgs.Twist> velSub = connectedNode.newSubscriber("cmd_vel", Twist._TYPE);
         final Subscriber<std_msgs.String> headSub = connectedNode.newSubscriber("padbot/headmove",String._TYPE);
         final Subscriber<std_msgs.Bool> enObstacleSub = connectedNode.newSubscriber("padbot/obstacle_enable", Bool._TYPE);
-        final Subscriber<std_msgs.Int8> cameraIDSub = connectedNode.newSubscriber("padbot/cameraID", Int8._TYPE);
 
         // ROS parameters
         ParameterTree params = connectedNode.getParameterTree();
