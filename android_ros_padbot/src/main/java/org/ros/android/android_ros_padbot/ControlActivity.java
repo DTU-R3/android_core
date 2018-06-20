@@ -51,7 +51,6 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
     static public Frame frame;
 
     // ROS messages
-    public PadbotNode node;
     static public int batteryData = 100;
     static public String obstacleData = "";
 
@@ -132,21 +131,13 @@ public class ControlActivity extends RosActivity implements RobotConnectionListe
 
     @Override
     protected void init(NodeMainExecutor nodeMainExecutor) {
-        node = new PadbotNode();
 
         NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(getRosHostname());
         nodeConfiguration.setMasterUri(getMasterUri());
 
         // Run the node
-        nodeMainExecutor.execute(node,nodeConfiguration);
-
-        // Virtual encoder node
-        VirtualEncoder virtual_encoder = new VirtualEncoder();
-        nodeMainExecutor.execute(virtual_encoder, nodeConfiguration);
-
-        // OdometryCtrl node
-        OdometryCtrl odometry_control = new OdometryCtrl();
-        nodeMainExecutor.execute(odometry_control, nodeConfiguration);
+        PadbotNode padbot_node = new PadbotNode();
+        nodeMainExecutor.execute(padbot_node,nodeConfiguration);
 
         // ARCore node
         ARCore ar_core = new ARCore();
