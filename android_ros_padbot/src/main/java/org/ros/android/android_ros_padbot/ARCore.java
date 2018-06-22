@@ -59,14 +59,17 @@ public class ARCore implements NodeMain {
                         });
 
         // Publishers and subscribers
-        final Publisher<Pose> posePub = connectedNode.newPublisher("arcore/pose", Pose._TYPE);
         final Publisher<Odometry> odomPub = connectedNode.newPublisher("arcore/odom", Odometry._TYPE);
         connectedNode.executeCancellableLoop(new CancellableLoop() {
 
             protected void loop() throws InterruptedException {
                 try {
-                    Pose robot_pose = posePub.newMessage();
-
+                    Odometry robot_odom = odomPub.newMessage();
+                    Header h = robot_odom.getHeader();
+                    h.setFrameId("odom");
+                    robot_odom.setChildFrameId("base_footprint");
+                    PoseWithCovariance poseWithC = robot_odom.getPose();
+                    Pose robot_pose = poseWithC.getPose();
                     float[] trans = cameraPose.getTranslation();
                     Point p = robot_pose.getPosition();
                     p.setX(trans[0]);
@@ -78,12 +81,6 @@ public class ARCore implements NodeMain {
                     q.setY(quat[1]);
                     q.setZ(quat[2]);
                     q.setW(quat[3]);
-                    Odometry robot_odom = odomPub.newMessage();
-                    Header h = robot_odom.getHeader();
-                    h.setFrameId("odom");
-                    robot_odom.setChildFrameId("base_footprint");
-                    PoseWithCovariance poseWithC = robot_odom.getPose();
-                    poseWithC.setPose(robot_pose);
                     odomPub.publish(robot_odom);
                 } catch (Exception e) {
 
