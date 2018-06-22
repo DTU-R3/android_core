@@ -40,7 +40,7 @@ public class PadbotNode extends AbstractNodeMain {
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
-
+        /*
         // Publishers and subscribers
         final Publisher<std_msgs.Int8> batteryPub = connectedNode.newPublisher("padbot/battery_percentage", Int8._TYPE);
         final Publisher<std_msgs.String> obstaclePub = connectedNode.newPublisher("padbot/obstacle", String._TYPE);
@@ -193,6 +193,7 @@ public class PadbotNode extends AbstractNodeMain {
                 obstacle_enable = bool.getData();
             }
         });
+        */
     }
 
     @Override

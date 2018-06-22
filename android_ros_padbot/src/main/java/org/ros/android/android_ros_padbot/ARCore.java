@@ -1,5 +1,11 @@
 package org.ros.android.android_ros_padbot;
 
+import com.google.ar.core.Frame;
+import com.google.ar.core.Session;
+import com.google.ar.core.exceptions.CameraNotAvailableException;
+import com.google.ar.core.exceptions.UnavailableException;
+import com.google.ar.sceneform.ArSceneView;
+
 import org.ros.concurrent.CancellableLoop;
 import org.ros.namespace.GraphName;
 import org.ros.node.ConnectedNode;
@@ -19,6 +25,14 @@ public class ARCore implements NodeMain {
     private static final String TAG = ARCore.class.getSimpleName();
     private String nodeName;
 
+    private boolean installRequested;
+
+    // ARCore
+    private ArSceneView arSceneView;
+    private static final int RC_PERMISSIONS = 0x123;
+    private com.google.ar.core.Pose cameraPose;
+    private Frame frame;
+
     public ARCore() {
         this.nodeName = "ARCore";
     }
@@ -30,6 +44,20 @@ public class ARCore implements NodeMain {
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
+
+        // Set an update listener on the Scene that will hide the loading message once a Plane is
+        MainActivity.arSceneView
+                .getScene()
+                .setOnUpdateListener(
+                        frameTime -> {
+
+                            frame = MainActivity.arSceneView.getArFrame();
+                            if (frame == null) {
+                                return;
+                            }
+                            cameraPose = frame.getCamera().getPose();
+                        });
+
         // Publishers and subscribers
         final Publisher<Pose> posePub = connectedNode.newPublisher("arcore/pose", Pose._TYPE);
         final Publisher<Odometry> odomPub = connectedNode.newPublisher("arcore/odom", Odometry._TYPE);
@@ -39,12 +67,12 @@ public class ARCore implements NodeMain {
                 try {
                     Pose robot_pose = posePub.newMessage();
 
-                    float[] trans = ControlActivity.cameraPose.getTranslation();
+                    float[] trans = cameraPose.getTranslation();
                     Point p = robot_pose.getPosition();
                     p.setX(trans[0]);
                     p.setY(trans[1]);
                     p.setZ(trans[2]);
-                    float[] quat = ControlActivity.cameraPose.getRotationQuaternion();
+                    float[] quat = cameraPose.getRotationQuaternion();
                     Quaternion q = robot_pose.getOrientation();
                     q.setX(quat[0]);
                     q.setY(quat[1]);
