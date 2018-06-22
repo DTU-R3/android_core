@@ -20,8 +20,10 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 
 import com.google.common.base.Preconditions;
 
@@ -238,10 +240,18 @@ public abstract class RosActivity extends Activity {
   protected abstract void init(NodeMainExecutor nodeMainExecutor);
 
   public void startMasterChooser() {
-    Preconditions.checkState(getMasterUri() == null);
+    /***************      Oringial code     ***********************
+    Preconditions.checkState(getMasterUri() == null)
     // Call this method on super to avoid triggering our precondition in the
     // overridden startActivityForResult().
     super.startActivityForResult(new Intent(this, masterChooserActivity), masterChooserRequestCode);
+    **************************************************************/
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+    String masterURI = prefs.getString("masterURI", "http://ROS-desktop:11311");
+
+    Intent data = new Intent();
+    data.putExtra("ROS_MASTER_URI", masterURI);
+    onActivityResult(0, RESULT_OK, data);
   }
 
   public URI getMasterUri() {
