@@ -1,8 +1,6 @@
 package org.ros.android.android_ros_padbot;
 
 import android.Manifest;
-import android.app.Application;
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -18,23 +16,35 @@ import org.ros.node.NodeMainExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import cn.inbot.padbotsdk.Robot;
 import cn.inbot.padbotsdk.RobotManager;
+import cn.inbot.padbotsdk.constant.RobotDisconnectType;
+import cn.inbot.padbotsdk.listener.RobotConnectionListener;
+import cn.inbot.padbotsdk.listener.RobotListener;
 import cn.inbot.padbotsdk.listener.RobotScanListener;
+import cn.inbot.padbotsdk.model.ObstacleDistanceData;
 import rx.functions.Action1;
 
-public class MainActivity extends RosActivity implements RobotScanListener {
+public class MainActivity extends RosActivity implements RobotScanListener, RobotConnectionListener,RobotListener {
 
   private static final String TAG = MainActivity.class.getSimpleName();
-  private boolean installRequested;
 
   // ARCore
   static public ArSceneView arSceneView;
   private static final int RC_PERMISSIONS = 0x123;
+  private boolean installRequested;
 
   // Padbot
-  static public List<String> robotList = new ArrayList<String>();
-  static public Application mainApp;
+  private List<String> robotList = new ArrayList<String>();
+  private boolean robot_state = false;
+  private int robotIndex = 0;
+  private java.lang.String serialNumber = "";
+  static public Robot robot;
+  static public int battery_data = 0;
+  static public String obstacle_data = "";
 
   public MainActivity() {
     super("PadBot", "PadBot");
@@ -44,7 +54,6 @@ public class MainActivity extends RosActivity implements RobotScanListener {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
-    mainApp = getApplication();
 
     // ARCore
     arSceneView = findViewById(R.id.ar_scene_view);
@@ -93,6 +102,37 @@ public class MainActivity extends RosActivity implements RobotScanListener {
                 }
               }
             });
+
+    RobotManager.getInstance(getApplication()).setRobotConnectionListener(this);
+    RobotManager.getInstance(getApplication()).openSoundSourceAngleListener();
+
+    TryConnectRobot();
+    
+    // Timer to check robot state
+    Timer timer = new Timer();
+    timer.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        // Connect the robot
+        if ((!robot_state)&&(PadbotNode.nodeState)) {
+          robot_state = true;
+          TryConnectRobot();
+        }
+        else if ((robot_state)&&(!PadbotNode.nodeState)) {
+          robot_state = false;
+          RobotManager.getInstance(getApplication()).disconnectRobot();
+          Log.d(TAG, "Disconnect robot");
+        }
+      }
+    }, 0,1);
+  }
+
+  private void TryConnectRobot() {
+    if (robotIndex < robotList.size()) {
+      serialNumber = robotList.get(robotIndex);
+      RobotManager.getInstance(getApplication()).connectRobotByBluetooth(serialNumber);
+      Log.d(TAG, "Connecting to " + serialNumber);
+    }
   }
 
   @Override
@@ -128,6 +168,69 @@ public class MainActivity extends RosActivity implements RobotScanListener {
 
   @Override
   public void onRobotScanCompleted() {
+
+  }
+
+  @Override
+  public void onRobotConnected(Robot r) {
+    Log.d(TAG, "Connected to " + serialNumber);
+    this.robot = r;
+    this.robot.setListener(this);
+    robot_state = true;
+    if (robot != null)
+    {
+      robot.setMovementSpeed(1);
+      robot.queryBatteryPercentage();
+      robot.queryObstacleDistanceData();
+    }
+  }
+
+  @Override
+  public void onRobotConnectFailed(String s) {
+    this.robot = null;
+    robotIndex += 1;
+    if (robotIndex >= robotList.size()) {
+      robotIndex = 0;
+    }
+    Log.d(TAG, "Connecting failed, keep trying");
+    TryConnectRobot();
+  }
+
+  @Override
+  public void onRobotDisconnected(String s, RobotDisconnectType robotDisconnectType) {
+    Log.d(TAG, "Robot disconnected");
+    this.robot = null;
+    robotIndex = 0;
+    robot_state = false;
+  }
+
+  @Override
+  public void onReceivedRobotObstacleDistanceData(ObstacleDistanceData d) {
+    obstacle_data = d.getFirstDistance() + "," + d.getSecondDistance() + "," + d.getThirdDistance() + "," + d.getFourthDistance() + "," + d.getFifthDistance();
+  }
+
+  @Override
+  public void onReceivedRobotBatteryPercentage(int i) {
+    battery_data = i;
+  }
+
+  @Override
+  public void onReceivedRobotHardwareVersion(int i) {
+
+  }
+
+  @Override
+  public void onReceivedRobotSerialNumber(String s) {
+
+  }
+
+  @Override
+  public void onReceivedCustomData(String s) {
+
+  }
+
+  @Override
+  public void onReceivedSoundSourceAngle(int i) {
 
   }
 }
