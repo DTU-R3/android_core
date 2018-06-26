@@ -67,6 +67,7 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
         final Subscriber<Bool> stateSub = connectedNode.newSubscriber("padbot/state",Bool._TYPE);
         final Subscriber<String> cmdSub = connectedNode.newSubscriber("padbot/cmd",String._TYPE);
         final Subscriber<Int8> speedSub = connectedNode.newSubscriber("padbot/speed_level",Int8._TYPE);
+        final Subscriber<String> robotSub = connectedNode.newSubscriber("padbot/robot",String._TYPE);
 
         RobotManager.getInstance(MainActivity.mainApp).setRobotConnectionListener(this);
         TryConnectRobot();
@@ -176,6 +177,18 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
                 }
             }
         });
+
+        robotSub.addMessageListener(new MessageListener<String>() {
+            @Override
+            public void onNewMessage(String string) {
+                if (robot != null) {
+                    RobotManager.getInstance(MainActivity.mainApp).disconnectRobot();
+                }
+                serialNumber = string.getData();
+                RobotManager.getInstance(MainActivity.mainApp).connectRobotByBluetooth(serialNumber);
+                Log.d(TAG, "Connecting to " + serialNumber);
+            }
+        });
     }
 
     private void TryConnectRobot() {
@@ -221,7 +234,7 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
         if (robotIndex >= MainActivity.robotList.size()) {
             robotIndex = 0;
         }
-        Log.d(TAG, "Connecting failed, keep trying");
+        Log.d(TAG, "Connecting failed, try another robot");
         TryConnectRobot();
     }
 
