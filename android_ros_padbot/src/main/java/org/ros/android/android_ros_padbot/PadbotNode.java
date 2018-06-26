@@ -47,8 +47,6 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
     private double linearSpeed = 0.0;
     private double angularSpeed = 0.0;
     private int vel_cmd = 0;
-    private double[] vel_linear = {0, 0.0779, 0.0763, 0.0762, 0.0753, 0.0752, 0};
-    private double[] vel_angular = {0, 0, 0.0312, 0.0585, 0.0896, 0.1212, 1.8};
 
     public PadbotNode() {
         this.nodeName = "Padbot";
@@ -63,15 +61,14 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
     public void onStart(ConnectedNode connectedNode) {
 
         // Publishers and subscribers
-        final Publisher<std_msgs.Int8> batteryPub = connectedNode.newPublisher("padbot/battery_percentage", Int8._TYPE);
-        final Publisher<std_msgs.String> obstaclePub = connectedNode.newPublisher("padbot/obstacle", String._TYPE);
+        final Publisher<Int8> batteryPub = connectedNode.newPublisher("padbot/battery_percentage", Int8._TYPE);
+        final Publisher<String> obstaclePub = connectedNode.newPublisher("padbot/obstacle", String._TYPE);
         final Subscriber<geometry_msgs.Twist> velSub = connectedNode.newSubscriber("cmd_vel", Twist._TYPE);
         final Subscriber<Bool> stateSub = connectedNode.newSubscriber("padbot/state",Bool._TYPE);
         final Subscriber<String> cmdSub = connectedNode.newSubscriber("padbot/cmd",String._TYPE);
+        final Subscriber<Int8> speedSub = connectedNode.newSubscriber("padbot/speed_level",Int8._TYPE);
 
-        Log.d(TAG,"zhongyu connect 1");
         RobotManager.getInstance(MainActivity.mainApp).setRobotConnectionListener(this);
-        Log.d(TAG,"zhongyu connect 2");
         TryConnectRobot();
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
@@ -129,37 +126,35 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
                 angularSpeed = twist.getAngular().getZ();
                 double v = Math.abs(linearSpeed);
                 double w = Math.abs(angularSpeed);
-                vel_cmd = 0;
-                double dist = 255.0;
-                for (int i=0; i < vel_linear.length; i++ ) {
-                    if( Math.sqrt((v-vel_linear[i])*(v-vel_linear[i])+(w-vel_angular[i])*(w-vel_angular[i])) < dist ) {
-                        dist = Math.sqrt((v-vel_linear[i])*(v-vel_linear[i])+(w-vel_angular[i])*(w-vel_angular[i]));
-                        vel_cmd = i;
-                    }
+                if ((v==0)&&(w==0)) {
+                    vel_cmd = 6;
+                }
+                else {
+                    vel_cmd = (int) (Math.atan2(w,v) / (Math.PI/12));
                 }
 
                 if (robot != null) {
                     switch (vel_cmd){
-                        case 1:
+                        case 0:
                             if(linearSpeed > 0)
                                 robot.goForward();
                             else
                                 robot.goBackward();
                             break;
+                        case 1:
                         case 2:
                         case 3:
                         case 4:
-                        case 5:
                             if((linearSpeed > 0)&&(angularSpeed > 0))
-                                robot.goForwardLeft(vel_cmd-1);
+                                robot.goForwardLeft(vel_cmd);
                             else if((linearSpeed > 0)&&(angularSpeed < 0))
-                                robot.goForwardRight(vel_cmd-1);
+                                robot.goForwardRight(vel_cmd);
                             else if((linearSpeed < 0)&&(angularSpeed > 0))
-                                robot.goBackwardRight(vel_cmd-1);
+                                robot.goBackwardRight(vel_cmd);
                             else
-                                robot.goBackwardLeft(vel_cmd-1);
+                                robot.goBackwardLeft(vel_cmd);
                             break;
-                        case 6:
+                        case 5:
                             if(angularSpeed > 0)
                                 robot.turnLeft();
                             else
@@ -169,6 +164,15 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
                             robot.stop();
                             break;
                     }
+                }
+            }
+        });
+
+        speedSub.addMessageListener(new MessageListener<Int8>() {
+            @Override
+            public void onNewMessage(Int8 int8) {
+                if (robot != null) {
+                    robot.setMovementSpeed(int8.getData());
                 }
             }
         });
