@@ -27,6 +27,7 @@ public class MainActivity extends RosActivity implements RobotScanListener {
 
   private static final String TAG = MainActivity.class.getSimpleName();
   private boolean installRequested;
+  static public Application mainApp;
 
   // ARCore
   static public ArSceneView arSceneView;
@@ -34,7 +35,7 @@ public class MainActivity extends RosActivity implements RobotScanListener {
 
   // Padbot
   static public List<String> robotList = new ArrayList<String>();
-  static public Application mainApp;
+
 
   public MainActivity() {
     super("PadBot", "PadBot");
@@ -44,7 +45,6 @@ public class MainActivity extends RosActivity implements RobotScanListener {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
-    mainApp = getApplication();
 
     // ARCore
     arSceneView = findViewById(R.id.ar_scene_view);

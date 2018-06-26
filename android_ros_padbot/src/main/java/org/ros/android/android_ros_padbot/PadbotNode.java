@@ -41,8 +41,8 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
     private int robotIndex = 0;
     private java.lang.String serialNumber = "";
     private Robot robot;
-    private int battery = 0;
-    private java.lang.String obstacle = "";
+    private int battery_data = 0;
+    private java.lang.String obstacle_data = "";
 
     private double linearSpeed = 0.0;
     private double angularSpeed = 0.0;
@@ -69,6 +69,9 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
         final Subscriber<Bool> stateSub = connectedNode.newSubscriber("padbot/state",Bool._TYPE);
         final Subscriber<String> cmdSub = connectedNode.newSubscriber("padbot/cmd",String._TYPE);
 
+        Log.d(TAG,"zhongyu connect 1");
+        RobotManager.getInstance(MainActivity.mainApp).setRobotConnectionListener(this);
+        Log.d(TAG,"zhongyu connect 2");
         TryConnectRobot();
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
@@ -77,8 +80,8 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
                 // Publish battery and obstacle data
                 std_msgs.Int8 batteryData = batteryPub.newMessage();
                 std_msgs.String obstacleData = obstaclePub.newMessage();
-                batteryData.setData((byte) battery);
-                obstacleData.setData(obstacle);
+                batteryData.setData((byte) battery_data);
+                obstacleData.setData(obstacle_data);
                 batteryPub.publish(batteryData);
                 obstaclePub.publish(obstacleData);
             }
@@ -93,7 +96,7 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
                 }
                 else {
                     RobotManager.getInstance(MainActivity.mainApp).disconnectRobot();
-                    Log.d(TAG, "Disconnect robot");
+                    Log.d(TAG, "Disconnecting robot");
                 }
             }
         });
@@ -226,13 +229,13 @@ public class PadbotNode extends AbstractNodeMain implements RobotConnectionListe
     }
 
     @Override
-    public void onReceivedRobotObstacleDistanceData(ObstacleDistanceData obstacleDistanceData) {
-        obstacle = obstacleDistanceData.toString();
+    public void onReceivedRobotObstacleDistanceData(ObstacleDistanceData d) {
+        obstacle_data = d.getFirstDistance() + "," + d.getSecondDistance() + "," + d.getThirdDistance() + "," + d.getFourthDistance() + "," + d.getFifthDistance();
     }
 
     @Override
     public void onReceivedRobotBatteryPercentage(int i) {
-        battery = i;
+        battery_data = i;
     }
 
     @Override
